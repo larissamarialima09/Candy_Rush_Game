@@ -1,0 +1,193 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Candy Rush</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <canvas id="viewport"></canvas>
+
+    <!-- Um HUD por jogador vive aqui dentro. O container é só o palco: quem
+         posiciona cada faixa é o JavaScript, a partir do mesmo retângulo que o
+         renderer usa como viewport WebGL. -->
+    <div id="players"></div>
+
+    <!-- Molde do HUD de um jogador. É clonado uma vez por piloto humano, o que
+         evita manter duas cópias do mesmo markup em sincronia.
+         Nada aqui usa id: ids são únicos por documento, e com dois jogadores na
+         tela haveria dois de cada elemento. -->
+    <template id="player-view-template">
+      <section class="player-view">
+        <!-- Efeitos de tela: vinheta, linhas de velocidade e a franja do turbo.
+             CSS puro, confinado à faixa deste jogador. -->
+        <div class="fx" aria-hidden="true">
+          <div class="fx-vignette"></div>
+          <div class="fx-speedlines"></div>
+          <div class="fx-chromatic"></div>
+        </div>
+
+        <div class="player-tag">P1</div>
+
+        <div class="race">
+          <div class="lap-line"><span class="lap-label">VOLTA</span><span class="lap-count">1</span></div>
+          <div class="lap-time time big">0:00.00</div>
+          <div class="time-row"><span>última</span><span class="last-lap">--:--.--</span></div>
+          <div class="time-row best"><span>melhor</span><span class="best-lap">--:--.--</span></div>
+          <div class="coins"><span class="coin-dot"></span><span class="coin-count">0</span></div>
+        </div>
+
+        <div class="warning"></div>
+
+        <div class="gauge">
+          <div class="drift-meter">
+            <div class="drift-track">
+              <div class="drift-fill"></div>
+            </div>
+            <div class="drift-pips">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="drift-label"></div>
+          </div>
+          <div class="speedo">
+            <span class="value">0</span><span class="unit">km/h</span>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <div id="hud"></div>
+
+    <div id="touch-controls" aria-label="Controles mobile">
+      <div class="touch-cluster steer">
+        <button id="touch-left" class="touch-button" type="button" aria-label="Virar para a esquerda">&lt;</button>
+        <button id="touch-right" class="touch-button" type="button" aria-label="Virar para a direita">&gt;</button>
+      </div>
+      <div class="touch-cluster pedals">
+        <button id="touch-reset" class="touch-button small" type="button" aria-label="Voltar para a pista">R</button>
+        <button id="touch-drift" class="touch-button small" type="button" aria-label="Freio de mão">D</button>
+        <button id="touch-brake" class="touch-button" type="button" aria-label="Frear">F</button>
+        <button id="touch-gas" class="touch-button primary" type="button" aria-label="Acelerar">A</button>
+      </div>
+    </div>
+
+
+    <!-- Tela de entrada. Fica por cima de tudo até a pessoa clicar em jogar. -->
+    <div id="start-screen">
+      <div class="card">
+        <div class="title">
+          <span class="candy">CANDY</span><span class="race">RACE</span>
+        </div>
+        <p class="tagline">corrida de kart no mundo dos doces</p>
+
+        <div class="modes">
+          <button id="play-button" class="mode" type="button">
+            <span class="mode-title">1 JOGADOR</span>
+            <span class="mode-sub">você contra o pelotão</span>
+          </button>
+          <button id="play-coop-button" class="mode" type="button">
+            <span class="mode-title">MULTIPLAYER</span>
+            <span class="mode-sub">local em tela dividida</span>
+          </button>
+        </div>
+
+        <div id="gamepad-hint" class="gamepad-hint" hidden>
+          controle detectado — o piloto 2 pode jogar nele
+        </div>
+
+        <div class="controls">
+          <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>piloto 1 — dirigir</span></div>
+          <div><kbd>shift</kbd><span>piloto 1 — freio de mão, derrape para carregar turbo</span></div>
+          <div><kbd>R</kbd><span>piloto 1 — voltar para a pista</span></div>
+          <div class="p2-only"><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd><span>piloto 2 — dirigir</span></div>
+          <div class="p2-only"><kbd>enter</kbd><span>piloto 2 — freio de mão</span></div>
+          <div class="p2-only"><kbd>?</kbd><span>piloto 2 — voltar para a pista</span></div>
+          <div><kbd>esc</kbd><span>pausar</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fim de corrida. O troféu é SVG desenhado à mão: escala em qualquer
+         tela, não pesa nada e não precisa de arquivo de imagem. -->
+    <div id="finish-screen">
+      <div class="card">
+        <div id="finish-trophy">
+          <svg viewBox="0 0 200 210" role="img" aria-label="Troféu">
+            <defs>
+              <linearGradient id="ouro" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffe9a8" />
+                <stop offset="45%" stop-color="#ffd24d" />
+                <stop offset="100%" stop-color="#f0a93f" />
+              </linearGradient>
+            </defs>
+
+            <!-- Alças -->
+            <path
+              d="M52 40 C18 40 18 92 56 96"
+              fill="none"
+              stroke="url(#ouro)"
+              stroke-width="13"
+              stroke-linecap="round"
+            />
+            <path
+              d="M148 40 C182 40 182 92 144 96"
+              fill="none"
+              stroke="url(#ouro)"
+              stroke-width="13"
+              stroke-linecap="round"
+            />
+
+            <!-- Taça -->
+            <path
+              d="M50 34 H150 V78 C150 112 128 132 100 132 C72 132 50 112 50 78 Z"
+              fill="url(#ouro)"
+            />
+            <!-- Pé e base -->
+            <rect x="90" y="130" width="20" height="26" rx="7" fill="url(#ouro)" />
+            <rect x="62" y="154" width="76" height="16" rx="8" fill="url(#ouro)" />
+            <rect x="50" y="168" width="100" height="20" rx="10" fill="#ffb347" />
+
+            <!-- Carinha fofa -->
+            <ellipse cx="80" cy="74" rx="7" ry="9" fill="#6b4a2f" />
+            <ellipse cx="120" cy="74" rx="7" ry="9" fill="#6b4a2f" />
+            <circle cx="82.5" cy="71" r="2.6" fill="#fff" />
+            <circle cx="122.5" cy="71" r="2.6" fill="#fff" />
+            <ellipse cx="63" cy="88" rx="9" ry="5.5" fill="#ff9ec4" opacity="0.75" />
+            <ellipse cx="137" cy="88" rx="9" ry="5.5" fill="#ff9ec4" opacity="0.75" />
+            <path
+              d="M86 90 Q100 104 114 90"
+              fill="none"
+              stroke="#6b4a2f"
+              stroke-width="5"
+              stroke-linecap="round"
+            />
+
+            <!-- Brilhos -->
+            <g fill="#fffbe6">
+              <path d="M28 22 l3.5 8 8 3.5 -8 3.5 -3.5 8 -3.5 -8 -8 -3.5 8 -3.5 z" />
+              <path d="M170 60 l2.6 6 6 2.6 -6 2.6 -2.6 6 -2.6 -6 -6 -2.6 6 -2.6 z" />
+              <path d="M158 16 l2 4.6 4.6 2 -4.6 2 -2 4.6 -2 -4.6 -4.6 -2 4.6 -2 z" />
+            </g>
+          </svg>
+        </div>
+
+        <div class="title" id="finish-title">VOCÊ VENCEU!</div>
+        <p class="tagline" id="finish-detail"></p>
+        <div id="finish-standings"></div>
+        <button id="restart-button" type="button">CORRER DE NOVO</button>
+      </div>
+    </div>
+
+    <!-- Pausa. Mesmo cartão, conteúdo menor. -->
+    <div id="pause-screen">
+      <div class="card">
+        <div class="title small">PAUSADO</div>
+        <button id="resume-button" type="button">CONTINUAR</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+

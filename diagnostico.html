@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Diagnóstico — Candy Race</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 6vw;
+        background: #1d1430;
+        color: #ffe3ee;
+        font: 15px/1.7 ui-monospace, Consolas, monospace;
+      }
+      h1 {
+        color: #ff8fbe;
+        font-size: 26px;
+        margin-bottom: 4px;
+      }
+      p.sub {
+        color: #b48ac0;
+        margin-bottom: 26px;
+      }
+      .linha {
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border-left: 5px solid #6b5a80;
+      }
+      .ok {
+        border-left-color: #7ee0a8;
+      }
+      .ruim {
+        border-left-color: #ff6b8b;
+      }
+      .rotulo {
+        color: #b48ac0;
+        font-size: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .valor {
+        font-size: 15px;
+        word-break: break-word;
+      }
+      .grande {
+        font-size: 19px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Se você está lendo isto, abrir arquivos locais funciona.</h1>
+    <p class="sub">
+      Esta página não usa nenhuma biblioteca. Os testes abaixo rodam sozinhos.
+    </p>
+    <div id="saida"></div>
+
+    <script>
+      // Sem módulos, sem dependências, sem servidor: esta página precisa abrir
+      // em qualquer circunstância para o diagnóstico valer alguma coisa.
+      var saida = document.getElementById('saida');
+
+      function linha(rotulo, valor, estado) {
+        var div = document.createElement('div');
+        div.className = 'linha' + (estado ? ' ' + estado : '');
+        var r = document.createElement('div');
+        r.className = 'rotulo';
+        r.textContent = rotulo;
+        var v = document.createElement('div');
+        v.className = 'valor' + (estado ? ' grande' : '');
+        v.textContent = valor;
+        div.appendChild(r);
+        div.appendChild(v);
+        saida.appendChild(div);
+      }
+
+      // --- WebGL: a causa número 1 de canvas preto ---
+      var canvas = document.createElement('canvas');
+      var gl = null;
+      var qual = '';
+      try {
+        gl = canvas.getContext('webgl2');
+        qual = 'WebGL 2';
+        if (!gl) {
+          gl = canvas.getContext('webgl');
+          qual = 'WebGL 1';
+        }
+        if (!gl) {
+          gl = canvas.getContext('experimental-webgl');
+          qual = 'WebGL experimental';
+        }
+      } catch (e) {
+        linha('Erro ao pedir WebGL', String(e && e.message), 'ruim');
+      }
+
+      if (gl) {
+        linha('WebGL', qual + ' disponível', 'ok');
+
+        var info = gl.getExtension('WEBGL_debug_renderer_info');
+        if (info) {
+          linha('Placa de vídeo', String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)));
+        }
+        linha('Textura máxima', gl.getParameter(gl.MAX_TEXTURE_SIZE) + ' px');
+
+        // Desenha um triângulo: ter contexto não garante que ele pinta.
+        try {
+          gl.clearColor(0.1, 0.8, 0.5, 1);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          var pixel = new Uint8Array(4);
+          gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+          var pintou = pixel[1] > 100;
+          linha(
+            'Desenho de teste',
+            pintou ? 'a placa realmente pintou o pixel' : 'contexto existe mas não pintou',
+            pintou ? 'ok' : 'ruim',
+          );
+        } catch (e) {
+          linha('Desenho de teste', 'falhou: ' + String(e && e.message), 'ruim');
+        }
+      } else {
+        linha(
+          'WebGL',
+          'INDISPONÍVEL — é por isso que o jogo não abre',
+          'ruim',
+        );
+        linha(
+          'O que fazer',
+          'Abra chrome://settings/system e ligue "Usar aceleração de hardware quando disponível", ' +
+            'depois reinicie o navegador. Confira também chrome://gpu.',
+        );
+      }
+
+      // --- Memória disponível para o navegador ---
+      if (performance && performance.memory) {
+        var limite = performance.memory.jsHeapSizeLimit / 1048576;
+        var usado = performance.memory.usedJSHeapSize / 1048576;
+        linha(
+          'Memória do navegador',
+          Math.round(usado) + ' MB em uso de ' + Math.round(limite) + ' MB disponíveis',
+        );
+      }
+      if (navigator.deviceMemory) {
+        linha('Memória da máquina', navigator.deviceMemory + ' GB (aproximado)');
+      }
+      linha('Navegador', navigator.userAgent);
+      linha('Endereço desta página', location.href);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "candy-rush",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview:vite": "vite preview",
+    "jogar": "node tools/serve.mjs",
+    "sky": "node tools/prepareSky.mjs",
+    "standalone": "node tools/buildStandalone.mjs",
+    "preview": "esbuild tools/renderPreview.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/renderPreview.mjs --log-level=error && node node_modules/.cache/renderPreview.mjs",
+    "check": "tsc --noEmit",
+    "sim": "esbuild tools/simCheck.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/simCheck.mjs --log-level=error && node node_modules/.cache/simCheck.mjs"
+  },
+  "dependencies": {
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.169.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}
