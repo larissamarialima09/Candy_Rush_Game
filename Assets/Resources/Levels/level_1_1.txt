@@ -1,0 +1,14 @@
+// Capítulo 1 "Sequence" - Fase 1
+// Objetivo: andar em linha reta e pegar o doce.
+// Solução ideal: Walk, Walk, Walk, Pick (4 blocos)
+chapter: 1
+index: 1
+dir: right
+blocks: walk, pick
+ideal: 4
+map:
+#######
+#.....#
+#R..H.#
+#.....#
+#######

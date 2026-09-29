@@ -1,0 +1,15 @@
+// Fase de TESTE (não aparece no jogo): mostra todos os tipos de casa.
+// Tem vazio (espaços), paredes, os 3 doces e o robô olhando para cima.
+chapter: 0
+index: 0
+dir: up
+blocks: walk, turnleft, turnright, pick, repeat, if, function
+ideal: 10
+map:
+  #####
+ ##.S.##
+##..#..##
+#H..R..G#
+##.....##
+ ##...##
+  #####

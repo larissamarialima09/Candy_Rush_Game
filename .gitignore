@@ -4,4 +4,33 @@ dist/
 chrome-profile/
 edge-profile/
 *.log
+
+# Pastas geradas pela Unity (nunca versionar)
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# Arquivos de IDE
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.csproj
+*.sln
+*.slnx
+*.user
+*.pidb
+*.suo
+*.userprefs
+
+# Builds e sistema
+*.apk
+*.ipa
 .DS_Store
+Thumbs.db

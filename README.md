@@ -1,1 +1,1 @@
-# Candy_Rush_Game
+# Candy_Rush_Game / CodePop_Game
