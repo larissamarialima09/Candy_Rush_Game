@@ -8,10 +8,12 @@
   MeshStandardMaterial,
   PCFSoftShadowMap,
   PointLight,
+  PMREMGenerator,
   Scene,
   Vector3,
   WebGLRenderer,
 } from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { measureSteerSign, RacerController } from './rivals/racerController';
 import { ChaseCamera } from './camera/chaseCamera';
 import { CENTERLINE, CIRCUIT } from './config/circuit';
@@ -24,7 +26,7 @@ import { RACE } from './config/race';
 import { TRACK } from './config/track';
 import { RaceDirector, type Competitor } from './race/raceDirector';
 import { FinishScreen, type SeriesStanding } from './ui/finishScreen';
-import { checkWebGL, installErrorOverlay } from './core/errorOverlay';
+import { checkWebGL, installErrorOverlay, reportFatal } from './core/errorOverlay';
 import { GameLoop } from './core/gameLoop';
 import { GameState } from './core/gameState';
 import { Input } from './core/input';
@@ -54,7 +56,7 @@ import { TrackSurface } from './track/trackSurface';
 import { DebugHud } from './ui/debugHud';
 import { Screens } from './ui/screens';
 import { Kart } from './vehicle/kart';
-import { KartView, rivalPalette } from './vehicle/kartView';
+import { KartView } from './vehicle/kartView';
 
 
 class CandyMusic {
@@ -323,6 +325,12 @@ renderer.shadowMap.type = PCFSoftShadowMap;
 renderer.setClearColor(HORIZON_COLOR, 1);
 
 const scene = new Scene();
+const reflectionRoom = new RoomEnvironment();
+const pmrem = new PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(reflectionRoom, 0.04).texture;
+scene.environmentIntensity = 0.3;
+reflectionRoom.dispose();
+pmrem.dispose();
 scene.background = new Color(HORIZON_COLOR);
 scene.fog = new Fog(HORIZON_COLOR, LIGHTING.fog.near, LIGHTING.fog.far);
 createSky(scene);
@@ -488,7 +496,7 @@ for (let i = 0; i < RACE.rivals.length; i++) {
   const rivalKart = new Kart();
   rivals.push({
     kart: rivalKart,
-    view: new KartView(rivalKart, scene, rivalPalette(profile.body, profile.fur, profile.ear)),
+    view: new KartView(rivalKart, scene, profile.character),
     controller: new RacerController(circuitPath, profile, i * 1.7, steerSign),
   });
 }
@@ -531,10 +539,8 @@ const finishScreen = new FinishScreen(() => {
 function createPlayer(index: number): Player {
   const kart = new Kart();
   const profile = COOP.players[index] ?? COOP.players[0];
-  const view =
-    index === 0
-      ? new KartView(kart, scene)
-      : new KartView(kart, scene, rivalPalette(profile.body, profile.fur, profile.ear));
+  const view = new KartView(kart, scene, profile.character);
+  void view.ready.catch(reportFatal);
 
   const lapTracker = new LapTracker(circuitPath);
 
@@ -793,10 +799,10 @@ const loop = new GameLoop(
     }
 
     for (const player of active) {
-      player.view.update(alpha);
+      player.view.update(alpha, state.simulates ? frameDt : 0);
       player.camera.applyToRender(alpha);
     }
-    for (const rival of rivals) rival.view.update(alpha);
+    for (const rival of rivals) rival.view.update(alpha, state.simulates ? frameDt : 0);
 
     // A caixa de sombra e as luzes seguem o PONTO MÃ‰DIO entre os humanos.
     // GrudÃ¡-las no piloto 1 faria o kart do piloto 2 perder a sombra assim que
@@ -887,7 +893,19 @@ window.addEventListener('resize', () => {
   layoutViewports();
 });
 
-loop.start();
+const startButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('#play-button, #play-coop-button'));
+for (const button of startButtons) button.disabled = true;
+const loading = document.createElement('p');
+loading.textContent = 'Carregando pilotos...';
+loading.setAttribute('role', 'status');
+document.querySelector('#start-screen .modes')?.after(loading);
+void Promise.all([...players.map(player => player.view.ready), ...rivals.map(rival => rival.view.ready)])
+  .then(() => {
+    loading.remove();
+    for (const button of startButtons) button.disabled = false;
+    startButtons[0]?.focus();
+    loop.start();
+  }).catch(reportFatal);
 
 
 function requireElement(id: string): HTMLElement {
@@ -901,7 +919,6 @@ declare global {
     webkitAudioContext?: typeof AudioContext;
   }
 }
-
 
 
 

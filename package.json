@@ -10,8 +10,9 @@
     "jogar": "node tools/serve.mjs",
     "sky": "node tools/prepareSky.mjs",
     "standalone": "node tools/buildStandalone.mjs",
-    "preview": "esbuild tools/renderPreview.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/renderPreview.mjs --log-level=error && node node_modules/.cache/renderPreview.mjs",
+    "preview": "esbuild tools/renderPreview.ts --bundle --format=esm --platform=node --loader:.glb=dataurl --outfile=node_modules/.cache/renderPreview.mjs --log-level=error && node node_modules/.cache/renderPreview.mjs",
     "check": "tsc --noEmit",
+    "check:karts": "esbuild tools/checkRabbitKarts.ts --bundle --format=esm --platform=node --loader:.glb=dataurl --outfile=node_modules/.cache/checkRabbitKarts.mjs --log-level=error && node node_modules/.cache/checkRabbitKarts.mjs",
     "sim": "esbuild tools/simCheck.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/simCheck.mjs --log-level=error && node node_modules/.cache/simCheck.mjs"
   },
   "dependencies": {

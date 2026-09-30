@@ -345,6 +345,10 @@ body {
 }
 
 /* `hidden` some de vez; a opacidade cuida da transiÃ§Ã£o antes disso. */
+#start-screen[hidden] {
+  display: none;
+}
+
 #start-screen.fading,
 #pause-screen.fading {
   opacity: 0;

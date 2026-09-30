@@ -74,6 +74,7 @@ jellyBlobs.update(0.35);
 
 const kart = new Kart();
 const kartView = new KartView(kart, scene);
+await kartView.ready;
 kartView.root.name = 'kart';
 new LapTracker(path).placeAtStart(kart);
 

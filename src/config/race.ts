@@ -12,7 +12,8 @@ export const RACE = {
    */
   rivals: [
     {
-      name: 'Bidu',
+      name: 'Nuvem',
+      character: 'Nuvem',
       body: 0x4a9ff5,
       fur: 0xfff2e0,
       ear: 0xffb27a,
@@ -26,7 +27,8 @@ export const RACE = {
       wanderPeriod: 4.2,
     },
     {
-      name: 'Lili',
+      name: 'Violeta',
+      character: 'Violeta',
       body: 0xff6fa5,
       fur: 0xfffaf2,
       ear: 0xffc0d8,
@@ -36,7 +38,8 @@ export const RACE = {
       wanderPeriod: 3.1,
     },
     {
-      name: 'Zizo',
+      name: 'Caramelo',
+      character: 'Caramelo',
       body: 0x6fd36f,
       fur: 0xffd98a,
       ear: 0xc98a4a,

@@ -29,6 +29,7 @@ const bundled = await build({
   minify: true,
   legalComments: 'none',
   write: false,
+  loader: { '.glb': 'dataurl' },
 });
 
 let script = bundled.outputFiles[0].text;
@@ -43,7 +44,8 @@ if (script.length === before) {
   console.warn('  aviso: referência a /sky.png não encontrada no pacote');
 }
 
-const css = readFileSync(resolve(ROOT, 'src/styles.css'), 'utf8');
+// A file BOM becomes part of the first selector when CSS is embedded in HTML.
+const css = readFileSync(resolve(ROOT, 'src/styles.css'), 'utf8').replace(/^\uFEFF/, '');
 const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
 
 // Troca o link da folha de estilo e a tag de módulo pelos conteúdos embutidos.

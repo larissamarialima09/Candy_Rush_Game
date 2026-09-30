@@ -77,8 +77,8 @@ export const COOP = {
    * relance no meio do pelotão.
    */
   players: [
-    { label: 'P1', tint: '#ff6fa5', body: 0xff6fa5, fur: 0xfffaf2, ear: 0xffc0d8 },
-    { label: 'P2', tint: '#59c8ff', body: 0x59c8ff, fur: 0xf2fbff, ear: 0xa8e4ff },
+    { label: 'P1', character: 'Amora', tint: '#f02ea0', body: 0xf02ea0, fur: 0xa56e49, ear: 0xf0a098 },
+    { label: 'P2', character: 'Nuvem', tint: '#186ef0', body: 0x186ef0, fur: 0xdfd7d1, ear: 0xf5aaa5 },
   ],
 
   /**
